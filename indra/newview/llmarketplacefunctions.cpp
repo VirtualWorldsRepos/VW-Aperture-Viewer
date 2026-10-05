@@ -358,7 +358,7 @@ namespace LLMarketplaceImport
 
     static std::string getInventoryImportURL()
     {
-        std::string url = getMarketplaceURL("MarketplaceURL");
+        std::string url = LLMarketplaceData::getMarketplaceURL();
 
         url += "api/1/";
         url += gAgent.getID().getString();
@@ -731,10 +731,24 @@ LLMarketplaceData::~LLMarketplaceData()
     gInventory.removeObserver(mInventoryObserver);
 }
 
+std::string LLMarketplaceData::getMarketplaceURL()
+{
+    if (!LLGridManager::getInstance()->isInSLMain())
+    {
+        std::string url = LLGridManager::getInstance()->getMarketplaceURL();
+        if (!url.empty())
+        {
+            return url;
+        }
+    }
+
+    return getMarketplaceURL("MarketplaceURL");
+}
+
 
 LLSD LLMarketplaceData::getMarketplaceStringSubstitutions()
 {
-    std::string marketplace_url = getMarketplaceURL("MarketplaceURL");
+    std::string marketplace_url = LLMarketplaceData::getMarketplaceURL();
     std::string marketplace_url_create = getMarketplaceURL("MarketplaceURL_CreateStore");
     std::string marketplace_url_dashboard = getMarketplaceURL("MarketplaceURL_Dashboard");
     std::string marketplace_url_imports = getMarketplaceURL("MarketplaceURL_Imports");

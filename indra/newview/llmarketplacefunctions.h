@@ -192,6 +192,8 @@ public:
     friend class LLSLMAssociateListingsResponder;
     friend class LLSLMDeleteListingsResponder;
 
+    static std::string getMarketplaceURL();
+
     static LLSD getMarketplaceStringSubstitutions();
 
     // Public SLM API : Initialization and status

@@ -445,6 +445,13 @@ void LLGridManager::gridInfoResponderCB(GridEntry* grid_entry)
             LL_DEBUGS("GridManager") << "[\""<<check<<"\"]: " << grid_entry->grid[GRID_WEB_PROFILE_VALUE] << LL_ENDL;
             continue;
         }
+        check = "marketplace";
+        if (node->hasName(check))
+        {
+            grid_entry->grid[GRID_MARKETPLACE_URL] = node->getTextContents();
+            LL_DEBUGS("GridManager") << "[\"" << check << "\"]: " << grid_entry->grid[GRID_MARKETPLACE_URL] << LL_ENDL;
+            continue;
+        }
         check = "profileuri";
         if (node->hasName(check))
         {
@@ -1204,6 +1211,27 @@ std::string LLGridManager::getWebProfileURL(const std::string& grid)
         LL_WARNS("GridManager") << "invalid grid '" << grid << "'" << LL_ENDL;
     }
     return web_profile_url;
+}
+
+std::string LLGridManager::getMarketplaceURL(const std::string& grid)
+{
+    std::string marketplace_url;
+    std::string grid_name = getGrid(grid);
+    if (!grid_name.empty())
+    {
+        marketplace_url = mGridList[grid_name][GRID_MARKETPLACE_URL].asString();
+    }
+    else
+    {
+        LL_WARNS("GridManager") << "invalid grid '" << grid << "'" << LL_ENDL;
+    }
+
+    if (!marketplace_url.empty() && marketplace_url.back() != '/')
+    {
+        marketplace_url += '/';
+    }
+
+    return marketplace_url;
 }
 
 void LLGridManager::updateIsInProductionGrid()

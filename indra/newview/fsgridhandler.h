@@ -58,6 +58,7 @@ const std::string GRID_ABOUT                = "about";
 const std::string GRID_SEARCH               = "search";
 const std::string GRID_WEB_PROFILE_VALUE    = "web_profile_url";
 const std::string GRID_SENDGRIDINFO         = "SendGridInfoToViewerOnLogin";
+const std::string GRID_MARKETPLACE_URL      = "marketplace";
 const std::string GRID_DIRECTORY_FEE        = "DirectoryFee";
 const std::string GRID_PLATFORM             = "platform";
 const std::string GRID_MESSAGE              = "message";
@@ -198,6 +199,11 @@ public:
 
     /// Return the url of the resident profile web site for the selected grid
     std::string getWebProfileURL() { return getWebProfileURL(mGrid); }
+
+    /// Return the Marketplace web URL for the given grid.
+    std::string getMarketplaceURL(const std::string& grid);
+    /// Return the Marketplace web URL for the selected grid.
+    std::string getMarketplaceURL() { return getMarketplaceURL(mGrid); }
 
     void setWebProfileUrl(const std::string& url) { mGridList[mGrid][GRID_WEB_PROFILE_VALUE] = url; }
 
