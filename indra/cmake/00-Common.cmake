@@ -103,6 +103,7 @@ if (WINDOWS)
           /W3
           /c
           /Zc:forScope
+          /Zc:wchar_t-
           /nologo
           /Oy-
           /Oi
