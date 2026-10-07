@@ -76,7 +76,7 @@ namespace {
         return domain;
     }
 
-    static std::string getMarketplaceURL(const std::string& urlStringName)
+    static std::string getMarketplaceURLFromString(const std::string& urlStringName)
     {
         LLStringUtil::format_map_t domain_arg;
         domain_arg["[MARKETPLACE_DOMAIN_NAME]"] = getMarketplaceDomain();
@@ -742,17 +742,17 @@ std::string LLMarketplaceData::getMarketplaceURL()
         }
     }
 
-    return getMarketplaceURL("MarketplaceURL");
+    return getMarketplaceURLFromString("MarketplaceURL");
 }
 
 
 LLSD LLMarketplaceData::getMarketplaceStringSubstitutions()
 {
     std::string marketplace_url = LLMarketplaceData::getMarketplaceURL();
-    std::string marketplace_url_create = getMarketplaceURL("MarketplaceURL_CreateStore");
-    std::string marketplace_url_dashboard = getMarketplaceURL("MarketplaceURL_Dashboard");
-    std::string marketplace_url_imports = getMarketplaceURL("MarketplaceURL_Imports");
-    std::string marketplace_url_info = getMarketplaceURL("MarketplaceURL_LearnMore");
+    std::string marketplace_url_create = getMarketplaceURLFromString("MarketplaceURL_CreateStore");
+    std::string marketplace_url_dashboard = getMarketplaceURLFromString("MarketplaceURL_Dashboard");
+    std::string marketplace_url_imports = getMarketplaceURLFromString("MarketplaceURL_Imports");
+    std::string marketplace_url_info = getMarketplaceURLFromString("MarketplaceURL_LearnMore");
 
     LLSD marketplace_sub_map;
 
