@@ -1,0 +1,116 @@
+name: Build OpenSim Viewer (Windows)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag, or commit to build'
+        required: true
+        default: 'dev'
+        type: string
+
+env:
+  AUTOBUILD_VARIABLES_FILE: ${{ github.workspace }}/build-variables/variables
+  XZ_DEFAULTS: -T0
+  FS_RELEASE_TYPE: Manual
+  FS_RELEASE_CHAN: Manual
+  addrsize: 64
+
+jobs:
+  build:
+    name: Windows OpenSim ${{ matrix.variant }}
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [regular, avx]
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 1
+
+      - name: Setup Python 3.11
+        id: py311
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set Python environment for CMake
+        shell: bash
+        run: |
+          echo "PYTHON=${{ steps.py311.outputs.python-path }}" >> "$GITHUB_ENV"
+
+      - name: Install Python requirements
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Verify Python LLSD
+        shell: bash
+        run: |
+          python -V
+          python - <<'PY'
+          import llsd
+          print("Python LLSD import OK")
+          PY
+
+      - name: Checkout build variables
+        uses: actions/checkout@v4
+        with:
+          repository: FirestormViewer/fs-build-variables
+          path: build-variables
+          fetch-depth: 1
+
+      - name: Set OpenSim build flags
+        shell: bash
+        run: |
+          echo 'FS_GRID=-DOPENSIM:BOOL=ON -DHAVOK_TPV:BOOL=OFF' >> "$GITHUB_ENV"
+          echo 'AUTOBUILD_VSVER=170' >> "$GITHUB_ENV"
+          echo 'platform=windows64' >> "$GITHUB_ENV"
+          echo 'fallback_platform=windows' >> "$GITHUB_ENV"
+
+      - name: Configure OpenSim build options
+        shell: bash
+        run: |
+          echo 'EXTRA_ARGS=-DUSE_FMODSTUDIO=OFF -DUSE_KDU=OFF --crashreporting' >> "$GITHUB_ENV"
+
+      - name: Add AVX2 flags
+        if: matrix.variant == 'avx'
+        shell: bash
+        run: |
+          echo 'FS_RELEASE_CHAN=Manualx64' >> "$GITHUB_ENV"
+          echo 'EXTRA_ARGS=-DUSE_FMODSTUDIO=OFF -DUSE_KDU=OFF --crashreporting --avx2' >> "$GITHUB_ENV"
+
+      - name: Show build configuration
+        shell: bash
+        run: |
+          echo "Ref: ${{ inputs.ref }}"
+          echo "Variant: ${{ matrix.variant }}"
+          echo "FS_GRID: ${FS_GRID}"
+          echo "FS_RELEASE_CHAN: ${FS_RELEASE_CHAN}"
+          echo "EXTRA_ARGS: ${EXTRA_ARGS}"
+          echo "AUTOBUILD_VSVER: ${AUTOBUILD_VSVER}"
+
+      - name: Configure
+        shell: bash
+        run: |
+          autobuild configure             -c ReleaseFS             -A${addrsize}             --             --package             --chan "${FS_RELEASE_CHAN}"             ${EXTRA_ARGS}             ${FS_GRID}
+
+      - name: Build
+        shell: bash
+        run: |
+          autobuild build             -c ReleaseFS             -A${addrsize}             --no-configure
+
+      - name: Upload Windows build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: opensim-windows-${{ matrix.variant }}
+          if-no-files-found: warn
+          path: |
+            build-*/newview/Release/*Setup.exe
+            build-*/newview/Release/*.xz
+            build-*/newview/Release/*.pdb
