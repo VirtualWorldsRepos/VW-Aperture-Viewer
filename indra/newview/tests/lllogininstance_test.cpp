@@ -74,9 +74,8 @@ static LLSD gLoginCreds;
 static bool gDisconnectCalled = false;
 
 #include "../llviewerwindow.h"
-void LLViewerWindow::setShowProgress(bool show) {}
+void LLViewerWindow::setShowProgress(bool show, bool fullscreen) {}
 LLProgressView * LLViewerWindow::getProgressView(void) const { return 0; }
-
 LLViewerWindow* gViewerWindow;
 
 std::string LLTrans::getString(std::string_view xml_desc, const LLStringUtil::format_map_t& args, bool def_string)
@@ -173,20 +172,6 @@ void LLGridManager::setGridChoice(const std::string& grid_name)
 {
 }
 
-bool LLGridManager::isInSLMain()
-{
-    return false;
-}
-bool LLGridManager::isInSLBeta()
-{
-    return false;
-}
-
-// <FS:CR>
-bool LLGridManager::isInSecondlife()
-{
-    return false;
-}
 #ifdef OPENSIM
 bool LLGridManager::isInOpenSim()
 {
@@ -268,7 +253,6 @@ LLFloater* LLFloaterReg::showInstance(std::string_view name, const LLSD& key, bo
 #include "../llprogressview.h"
 void LLProgressView::setText(std::string const &){}
 void LLProgressView::setPercent(float){}
-void LLProgressView::setMessage(std::string const &){}
 
 //-----------------------------------------------------------------------------
 // LLNotifications
