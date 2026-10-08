@@ -222,7 +222,7 @@ namespace tut
         LLUrlMatch match;
         ensure_equals("getTooltip() == ''", match.getTooltip(), "");
 
-        match.setValues(10, 20, "", "", "", "", "Info", LLStyle::Params(), "", "", "", LLUUID::null);
+        match.setValues(10, 20, "", "", "", "Info", "", LLStyle::Params(), "", "", "", LLUUID::null);
         ensure_equals("getTooltip() == 'Info'", match.getTooltip(), "Info");
 
         match.setValues(10, 20, "", "", "", "", "", LLStyle::Params(), "", "", "", LLUUID::null);
