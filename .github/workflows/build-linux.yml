@@ -1,0 +1,233 @@
+name: Linux Build
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    name: Linux x86_64 ReleaseOS
+    runs-on: ubuntu-22.04
+
+    env:
+      AUTOBUILD_ADDRSIZE: 64
+      AUTOBUILD_BUILD_ID: ${{ github.run_id }}
+      AUTOBUILD_CONFIGURATION: ReleaseOS
+      AUTOBUILD_INSTALLABLE_CACHE: ${{ github.workspace }}/.autobuild-installables
+      AUTOBUILD_VARIABLES_FILE: ${{ github.workspace }}/.build-variables/variables
+      AUTOBUILD_VCS_INFO: "true"
+
+      BUILDSCRIPTS_SHARED: ${{ github.workspace }}/.shared
+      BUILDSCRIPTS_SUPPORT_FUNCTIONS: ${{ github.workspace }}/buildscripts_support_functions
+
+      GIT_REF: ${{ github.head_ref || github.ref }}
+      LL_SKIP_REQUIRE_SYSROOT: 1
+      LOGFAIL: DEBUG
+
+      build_log_dir: ${{ github.workspace }}/.logs
+      build_viewer: true
+      variants: ReleaseOS
+
+      viewer_grid: opensim
+      viewer_channel: Aperture Viewer Linux
+
+      master_message_template_checkout: ${{ github.workspace }}/.master-message-template
+
+    steps:
+      - name: Checkout viewer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Checkout build variables
+        uses: actions/checkout@v4
+        with:
+          repository: secondlife/build-variables
+          ref: master
+          path: .build-variables
+
+      - name: Checkout master message template
+        uses: actions/checkout@v4
+        with:
+          repository: secondlife/master-message-template
+          ref: master
+          path: .master-message-template
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            gcc-11 \
+            g++-11 \
+            cmake \
+            git \
+            libssl-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libpulse-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libfontconfig-dev \
+            libfreetype6-dev \
+            mesa-common-dev \
+            xz-utils \
+            zstd \
+            bzip2 \
+            tar
+
+      - name: Select GCC 11
+        run: |
+          sudo update-alternatives \
+            --install /usr/bin/gcc gcc /usr/bin/gcc-11 110
+
+          sudo update-alternatives \
+            --install /usr/bin/g++ g++ /usr/bin/g++-11 110
+
+          gcc --version
+          g++ --version
+
+      - name: Install Autobuild
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Cache Autobuild packages
+        uses: actions/cache@v4
+        with:
+          path: .autobuild-installables
+          key: Linux-64-ReleaseOS-${{ hashFiles('autobuild.xml') }}
+          restore-keys: |
+            Linux-64-ReleaseOS-
+            Linux-64-
+
+      - name: Build viewer
+        id: build
+        shell: bash
+        env:
+          AUTOBUILD_VCS_BRANCH: ${{ github.head_ref || github.ref_name }}
+          PYTHON_COMMAND: python3
+          PYTHON_COMMAND_NATIVE: python3
+
+        run: |
+          set -euo pipefail
+          set -x
+
+          mkdir -p "$build_log_dir"
+          mkdir -p "$BUILDSCRIPTS_SHARED/packages/lib/python"
+
+          source "$BUILDSCRIPTS_SUPPORT_FUNCTIONS"
+
+          native_path()
+          {
+            echo "$1"
+          }
+
+          shell_path()
+          {
+            echo "$1"
+          }
+
+          finalize()
+          {
+            case "$1" in
+              true|0)
+                record_success "Build Succeeded"
+                ;;
+              *)
+                record_failure "Build Failed with $1"
+                ;;
+            esac
+          }
+
+          initialize_build()
+          {
+            echo "initialize_build"
+          }
+
+          initialize_version()
+          {
+            export revision="$AUTOBUILD_BUILD_ID"
+          }
+
+          python_cmd()
+          {
+            if [[ "x${1:0:1}" == "x-" ]]
+            then
+              "$PYTHON_COMMAND" "$@"
+            elif [[ "$(basename "$1")" == "codeticket.py" ]]
+            then
+              echo "## $@"
+            else
+              local script="$1"
+              shift
+              "$PYTHON_COMMAND" "$script" "$@"
+            fi
+          }
+
+          repo_branch()
+          {
+            echo "$AUTOBUILD_VCS_BRANCH"
+          }
+
+          record_dependencies_graph()
+          {
+            echo "Dependency graph generation is not used for this public Linux build."
+          }
+
+          sleep()
+          {
+            echo "Not sleeping for $1 seconds"
+          }
+
+          export -f native_path
+          export -f shell_path
+          export -f finalize
+          export -f initialize_build
+          export -f initialize_version
+          export -f python_cmd
+          export -f repo_branch
+          export -f record_dependencies_graph
+          export -f sleep
+
+          export arch=Linux
+          export AUTOBUILD="$(command -v autobuild)"
+
+          echo "AUTOBUILD=$AUTOBUILD"
+          echo "AUTOBUILD_CONFIGURATION=$AUTOBUILD_CONFIGURATION"
+          echo "AUTOBUILD_ADDRSIZE=$AUTOBUILD_ADDRSIZE"
+          echo "AUTOBUILD_VARIABLES_FILE=$AUTOBUILD_VARIABLES_FILE"
+          echo "viewer_channel=$viewer_channel"
+          echo "viewer_grid=$viewer_grid"
+
+          ./build.sh
+
+      - name: Upload Linux viewer
+        uses: actions/upload-artifact@v4
+        with:
+          name: aperture-linux-x86_64
+          path: |
+            build-linux-i686/newview/*.tar.xz
+          if-no-files-found: error
+
+      - name: Upload build metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aperture-linux-build-logs
+          path: |
+            .logs/
+            build-linux-i686/newview/viewer_version.txt
+            build-linux-i686/autobuild-package.xml
+          if-no-files-found: ignore
