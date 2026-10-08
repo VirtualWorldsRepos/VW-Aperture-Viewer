@@ -40,7 +40,9 @@
 #include "llprimtexturelist.h"
 #include "llmaterialid.h"
 #include "llsdutil.h"
+#ifndef LL_TEST
 #include "../newview/llviewercontrol.h" // <FS:WW> Feature: Fullbright Toggle - Include for gSavedSettings
+#endif
 
 /**
  * exported constants
@@ -1270,12 +1272,14 @@ bool LLPrimitive::packTEMessage(LLMessageSystem *mesgsys) const
 			bump[face_index] = te.getBumpShinyFullbright();
 			// <AP:WW> Feature: Fullbright Toggle - Conditionally use fullbright based on preference
 			// Refactor: Use AP Fullbright setting.
+#ifndef LL_TEST
 			if(!gSavedSettings.getBOOL("APRenderEnableFullbright"))
 			{
 				bump[face_index] = te.getBumpShiny(); // Use non-fullbright attribute
 			}
             // </AP:WW>
 			else
+#endif
 			{
 				bump[face_index] = te.getBumpShinyFullbright(); // Use fullbright attribute
 			}
@@ -1367,12 +1371,14 @@ bool LLPrimitive::packTEMessage(LLDataPacker &dp) const
 			bump[face_index] = te.getBumpShinyFullbright();
 			// <AP:WW> Feature: Fullbright Toggle - Conditionally use fullbright based on preference
 			// Refactor: Use AP Fullbright setting.
+#ifndef LL_TEST
 			if(!gSavedSettings.getBOOL("APRenderEnableFullbright"))
 			{
 				bump[face_index] = te.getBumpShiny(); // Use non-fullbright attribute
 			}
             // </AP:WW>
 			else
+#endif
 			{
 				bump[face_index] = te.getBumpShinyFullbright(); // Use fullbright attribute
 			}

@@ -218,7 +218,7 @@ jobs:
         with:
           name: aperture-linux-x86_64
           path: |
-            build-linux-i686/newview/*.tar.xz
+            build-linux-x86_64/newview/*.tar.xz
           if-no-files-found: error
 
       - name: Upload build metadata
@@ -228,6 +228,6 @@ jobs:
           name: aperture-linux-build-logs
           path: |
             .logs/
-            build-linux-i686/newview/viewer_version.txt
-            build-linux-i686/autobuild-package.xml
+            build-linux-x86_64/newview/viewer_version.txt
+            build-linux-x86_64/autobuild-package.xml
           if-no-files-found: ignore
