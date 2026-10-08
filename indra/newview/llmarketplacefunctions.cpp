@@ -735,11 +735,7 @@ std::string LLMarketplaceData::getMarketplaceURL()
 {
     if (!LLGridManager::getInstance()->isInSLMain())
     {
-        std::string url = LLGridManager::getInstance()->getMarketplaceURL();
-        if (!url.empty())
-        {
-            return url;
-        }
+        return LLGridManager::getInstance()->getMarketplaceURL();
     }
 
     return getMarketplaceURLFromString("MarketplaceURL");
